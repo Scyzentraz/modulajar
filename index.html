@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer with Fullscreen</title>
+    <style>
+        /* Reset margin dan padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .toolbar {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #333;
+            padding: 10px 20px;
+            color: white;
+            font-size: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .toolbar button {
+            padding: 5px 10px;
+            background: #555;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .toolbar button:hover {
+            background: #777;
+        }
+
+        .pdf-container {
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+        }
+
+        canvas {
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div>
+            <button id="prevPage">Previous</button>
+            <button id="nextPage">Next</button>
+        </div>
+        <div>
+            Page <span id="currentPage">1</span> of <span id="totalPages">0</span>
+        </div>
+        <div>
+            <button id="fullscreen">Fullscreen</button>
+        </div>
+    </div>
+
+    <!-- Kontainer PDF -->
+    <div class="pdf-container" id="pdfContainer">
+        <canvas id="pdfCanvas"></canvas>
+    </div>
+
+    <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+    <script>
+        // PDF.js setup
+        const pdfUrl = 'https://cors-anywhere.herokuapp.com/https://drive.google.com/uc?export=download&id=1keUDcXK7APPZiJzAEsF3eYNKtcP6bB2G'; // Path file PDF Anda
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const pdfContainer = document.getElementById('pdfContainer');
+        const ctx = pdfCanvas.getContext('2d');
+
+        let pdfDoc = null,
+            currentPage = 1,
+            totalPages = 0,
+            scale = 1.5; // Zoom level
+
+        const renderPage = (pageNum) => {
+            pdfDoc.getPage(pageNum).then((page) => {
+                const viewport = page.getViewport({ scale });
+                pdfCanvas.width = viewport.width;
+                pdfCanvas.height = viewport.height;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+                document.getElementById('currentPage').textContent = currentPage;
+            });
+        };
+
+        const showPrevPage = () => {
+            if (currentPage <= 1) return;
+            currentPage--;
+            renderPage(currentPage);
+        };
+
+        const showNextPage = () => {
+            if (currentPage >= totalPages) return;
+            currentPage++;
+            renderPage(currentPage);
+        };
+
+        // Load the PDF
+        pdfjsLib.getDocument(pdfUrl).promise.then((pdf) => {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            document.getElementById('totalPages').textContent = totalPages;
+            renderPage(currentPage);
+        });
+
+        // Add event listeners for navigation
+        document.getElementById('prevPage').addEventListener('click', showPrevPage);
+        document.getElementById('nextPage').addEventListener('click', showNextPage);
+
+        // Fullscreen functionality
+        const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+                pdfContainer.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        };
+
+        document.getElementById('fullscreen').addEventListener('click', toggleFullscreen);
+    </script>
+</body>
+</html>
