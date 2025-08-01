@@ -51,5 +51,5 @@ def cek_info_gpu():
         subprocess.run(['nvidia-smi'], check=True)
     except:
         print("⚠️ nvidia-smi tidak tersedia di lingkungan ini.")
-
+#6rt
 cek_info_gpu()
